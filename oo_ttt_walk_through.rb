@@ -15,7 +15,7 @@ class Board
   end
 
   def unmarked_keys
-    @squares.select{|key, _| @squares[key].unmarked?}.keys
+    @squares.select { |key, _| @squares[key].unmarked? }.keys
   end
 
   def full?
@@ -27,21 +27,21 @@ class Board
   end
 
   def all_squares_same_marker?(squares)
-    squares.collect(&:marker).all?{|let| let == squares[0].marker}
+    squares.collect(&:marker).all? { |let| let == squares[0].marker }
   end
 
   # returns winning marker or nil
   def winning_marker
     WINNING_LINES.each do |line|
-      if count_marker(@squares.values_at(*line)) == 3 # => values_at method returns an array of the
-        return @squares[line[0]].marker               #    values at that line. the splat method (*) passes
-      end                                             #    those values individually as arguments
+      if count_marker(@squares.values_at(*line)) == 3
+        return @squares[line[0]].marker
+      end
     end
     nil
   end
 
   def reset
-    (1..9).each do |k, v|
+    (1..9).each do |k, _|
       @squares[k] = Square.new
     end
   end
@@ -64,7 +64,7 @@ class Board
 
   def count_marker(squares) # argument is array of squares
     if all_squares_same_marker?(squares)
-      squares.collect(&:marker).count{|let| let =~ /[^\s]+/} # checks to see if the markers are anything but white spaces
+      squares.collect(&:marker).count { |let| let =~ /[^\s]+/ }
     end
   end
 end
@@ -93,7 +93,6 @@ class Player
   def initialize(marker)
     @marker = marker
   end
-
 end
 
 class TTTGame
@@ -132,7 +131,7 @@ class TTTGame
     @computer = Player.new(COMPUTER_MARKER)
     @current_marker = FIRST_TO_MOVE
   end
-  
+
   def display_welcome_message
     puts "Welcome to Tic Tac Toe!"
     puts ""
@@ -152,7 +151,7 @@ class TTTGame
   def human_moves
     puts "Choose a square (#{board.unmarked_keys.join(', ')}) "
     square = nil
-    loop do 
+    loop do
       square = gets.chomp.to_i
       break if (board.unmarked_keys).include?(square)
       puts "Sorry, that's not a valid choice."
@@ -176,7 +175,7 @@ class TTTGame
       puts "It's a tie!"
     end
   end
-  
+
   def play_again?
     answer = nil
     loop do
