@@ -1,5 +1,3 @@
-require "pry"
-
 class Board
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
                   [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # cols
@@ -10,7 +8,7 @@ class Board
     reset
   end
 
-  def []= (key, marker)
+  def []=(key, marker)
     @squares[key].marker = marker
   end
 
@@ -46,26 +44,33 @@ class Board
     end
   end
 
+  # rubocop:disable Metrics/AbcSize
+  # rubocop:disable Metrics/MethodLength
+
   def draw
+    puts ""
     puts "     |     |"
-    puts "  #{@squares[1]}  |  #{@squares[2]}  |   #{@squares[3]}"
-    puts "     |     |"
-    puts "-----+-----+-----"
-    puts "     |     |"
-    puts "  #{@squares[4]}  |  #{@squares[5]}  |   #{@squares[6]}"
+    puts "  #{@squares[1]}  |  #{@squares[2]}  |  #{@squares[3]}"
     puts "     |     |"
     puts "-----+-----+-----"
     puts "     |     |"
-    puts "  #{@squares[7]}  |  #{@squares[8]}  |   #{@squares[9]}"
+    puts "  #{@squares[4]}  |  #{@squares[5]}  |  #{@squares[6]}"
     puts "     |     |"
+    puts "-----+-----+-----"
+    puts "     |     |"
+    puts "  #{@squares[7]}  |  #{@squares[8]}  |  #{@squares[9]}"
+    puts "     |     |"
+    puts ""
   end
+
+  # rubocop:enable Metrics/AbcSize
+  # rubocop:enable Metrics/MethodLength
 
   private
 
   def count_marker(squares) # argument is array of squares
-    if all_squares_same_marker?(squares)
-      squares.collect(&:marker).count { |let| let =~ /[^\s]+/ }
-    end
+    return unless all_squares_same_marker?(squares)
+    squares.collect(&:marker).count { |let| let =~ /[^\s]+/ }
   end
 end
 
@@ -106,20 +111,7 @@ class TTTGame
   def play
     clear
     display_welcome_message
-    loop do
-      display_board
-      loop do
-        human_moves
-        break if board.someone_won? || board.full?
-        computer_moves
-        break if board.someone_won? || board.full?
-        clear_screen_and_display_board
-      end
-      display_result
-      break unless play_again?
-      reset
-      display_play_again_message
-    end
+    main_game
     display_goodbye_message
   end
 
@@ -220,6 +212,25 @@ class TTTGame
 
   def human_turn?
     @current_marker == HUMAN_MARKER
+  end
+
+  def player_move
+    loop do
+      current_player_moves
+      break if board.someone_won? || board.full?
+      clear_screen_and_display_board if human_turn?
+    end
+  end
+
+  def main_game
+    loop do
+      display_board
+      player_move
+      display_result
+      break unless play_again?
+      reset
+      display_play_again_message
+    end
   end
 end
 
