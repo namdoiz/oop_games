@@ -1,3 +1,5 @@
+require 'pry'
+
 class Board
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
                   [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # cols
@@ -25,7 +27,7 @@ class Board
   end
 
   def all_squares_same_marker?(squares)
-    squares.collect(&:marker).all? { |let| let == squares[0].marker }
+    squares.map(&:marker).all? { |let| let == squares[0].marker }
   end
 
   # returns winning marker or nil
@@ -68,9 +70,10 @@ class Board
 
   private
 
-  def count_marker(squares) # argument is array of squares
+  # returns count of markers that are not empty space
+  def count_marker(squares) # argument is array of square objects
     return unless all_squares_same_marker?(squares)
-    squares.collect(&:marker).count { |let| let =~ /[^\s]+/ }
+    squares.map(&:marker).count { |let| let =~ /[^\s]+/ }
   end
 end
 
@@ -94,9 +97,11 @@ end
 
 class Player
   attr_reader :marker
+  attr_accessor :score
 
   def initialize(marker)
     @marker = marker
+    @score = 0
   end
 end
 
@@ -111,7 +116,7 @@ class TTTGame
   def play
     clear
     display_welcome_message
-    main_game
+    ask_mode
     display_goodbye_message
   end
 
@@ -124,6 +129,38 @@ class TTTGame
     @current_marker = FIRST_TO_MOVE
   end
 
+  def ask_mode
+    game_mode_aesthetics
+    answer = nil
+    loop do
+      prompt_for_user_choice
+      answer = gets.chomp.strip
+      break if ['1', '2'].include?(answer)
+      puts "Sorry must be 1 or 2"
+    end
+    mode_path(answer)
+  end
+
+  def prompt_for_user_choice
+    puts "Enter game mode:"
+    puts ""
+    puts "(1) One game\n(2) First to 5"
+  end
+
+  def game_mode_aesthetics
+    puts "**** GAME MODE ****"
+    puts ""
+  end
+
+  def mode_path(answer)
+    case answer
+    when '1'
+      one_game_mode
+    else
+      first_to_five_mode
+    end
+  end
+
   def display_welcome_message
     puts "Welcome to Tic Tac Toe!"
     puts ""
@@ -133,7 +170,8 @@ class TTTGame
     puts "Thanks for playing Tic Tac Toe! Goodbye!"
   end
 
-  def display_board
+  def display_board_for_one_game
+    clear
     puts "You are #{human.marker} Computer is #{computer.marker}"
     puts ""
     board.draw
@@ -141,7 +179,7 @@ class TTTGame
   end
 
   def human_moves
-    puts "Choose a square (#{board.unmarked_keys.join(', ')}) "
+    puts "Choose a square (#{joinor(board.unmarked_keys)})"
     square = nil
     loop do
       square = gets.chomp.to_i
@@ -151,12 +189,24 @@ class TTTGame
     board[square] = human.marker
   end
 
+  def joinor(arr, sep = ',', last = "or")
+    array_size =  arr.size
+    if array_size == 1
+      arr[0]
+    elsif array_size == 2
+      arr.join(" " + last + " ")
+    elsif array_size > 2
+      last_element = arr.pop
+      arr.join("#{sep} ") + " " + last + " " + last_element.to_s
+    end
+  end
+
   def computer_moves
     board[board.unmarked_keys.sample] = computer.marker
   end
 
-  def display_result
-    clear_screen_and_display_board
+  def display_result_for_one_game
+    clear_screen_and_display_board_for_one_game
 
     case board.winning_marker
     when human.marker
@@ -166,6 +216,31 @@ class TTTGame
     else
       puts "It's a tie!"
     end
+  end
+
+  def display_result_for_first_to_5
+    clear_screen_and_display_board_for_first_to_5
+
+    case board.winning_marker
+    when human.marker
+      after_human_wins
+    when computer.marker
+      after_computer_wins
+    else
+      puts "It's a tie!"
+    end
+  end
+
+  def after_human_wins
+    human.score += 1
+    clear_screen_and_display_board_for_first_to_5
+    puts "You won!"
+  end
+
+  def after_computer_wins
+    computer.score += 1
+    clear_screen_and_display_board_for_first_to_5
+    puts "Computer Won"
   end
 
   def play_again?
@@ -184,9 +259,14 @@ class TTTGame
     system "clear"
   end
 
-  def clear_screen_and_display_board
+  def clear_screen_and_display_board_for_one_game
     clear
-    display_board
+    display_board_for_one_game
+  end
+
+  def clear_screen_and_display_board_for_first_to_5
+    clear
+    display_board_for_first_to_5
   end
 
   def reset
@@ -214,25 +294,55 @@ class TTTGame
     @current_marker == HUMAN_MARKER
   end
 
-  def player_move
+  def player_move_for_one_game
     loop do
       current_player_moves
       break if board.someone_won? || board.full?
-      clear_screen_and_display_board if human_turn?
+      clear_screen_and_display_board_for_one_game if human_turn?
     end
   end
 
-  def main_game
+  def player_move_for_first_to_5
     loop do
-      display_board
-      player_move
-      display_result
+      current_player_moves
+      break if board.someone_won? || board.full?
+      clear_screen_and_display_board_for_first_to_5 if human_turn?
+    end
+  end
+
+  def one_game_mode
+    loop do
+      display_board_for_one_game
+      player_move_for_one_game
+      display_result_for_one_game
       break unless play_again?
       reset
       display_play_again_message
     end
   end
-end
 
+  def first_to_five_mode
+    count = 0
+    loop do
+      display_board_for_first_to_5
+      player_move_for_first_to_5
+      display_result_for_first_to_5
+      count += 1
+      break if count == 5
+      reset
+      display_play_again_message
+    end
+  end
+
+  def display_board_for_first_to_5
+    clear
+    puts "You are #{human.marker} Computer is #{computer.marker}"
+    puts ""
+    puts "Your score: #{human.score}\nComputer score: #{computer.score}"
+    puts ""
+    board.draw
+    puts ""
+  end
+end
 game = TTTGame.new
 game.play
