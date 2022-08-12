@@ -40,6 +40,32 @@ class Board
     nil
   end
 
+  def human_in_two_out_of_three_squares?(line)
+    @squares.values_at(*line).map(&:marker).count(TTTGame::HUMAN_MARKER) == 2 &&
+      @squares.values_at(*line).map(&:marker).count(Square::INITIAL_MARKER) == 1
+  end
+
+  def human_about_to_win?
+    WINNING_LINES.each do |line|
+      if human_in_two_out_of_three_squares?(line)
+        return true
+      end
+    end
+    nil
+  end
+
+  def last_square
+    WINNING_LINES.each do |line|
+      if human_in_two_out_of_three_squares?(line)
+        return @squares.key(winning_line(line)[0])
+      end
+    end
+  end
+
+  def winning_line(line)
+    @squares.values_at(*line).select { |square| square.marker == " " }
+  end
+
   def reset
     (1..9).each do |k, _|
       @squares[k] = Square.new
@@ -202,7 +228,15 @@ class TTTGame
   end
 
   def computer_moves
-    board[board.unmarked_keys.sample] = computer.marker
+    if board.human_about_to_win?
+      computer_defends
+    else
+      board[board.unmarked_keys.sample] = computer.marker
+    end
+  end
+
+  def computer_defends
+    board[board.last_square] = computer.marker
   end
 
   def display_result_for_one_game
