@@ -41,8 +41,17 @@ class Board
   end
 
   def human_in_two_out_of_three_squares?(line)
-    @squares.values_at(*line).map(&:marker).count(TTTGame::HUMAN_MARKER) == 2 &&
-      @squares.values_at(*line).map(&:marker).count(Square::INITIAL_MARKER) == 1
+    marker_at_lines(@squares.values_at(*line), TTTGame::HUMAN_MARKER) == 2 &&
+      marker_at_lines(@squares.values_at(*line), Square::INITIAL_MARKER) == 1
+  end
+
+  def computer_in_two_out_of_three_squares?(line)
+    marker_at_lines(@squares.values_at(*line), TTTGame::COMPUTER_MARKER) == 2 &&
+      marker_at_lines(@squares.values_at(*line), Square::INITIAL_MARKER) == 1
+  end
+
+  def marker_at_lines(line_values, marker)
+    line_values.map(&:marker).count(marker)
   end
 
   def human_about_to_win?
@@ -54,9 +63,26 @@ class Board
     nil
   end
 
-  def last_square
+  def computer_about_to_win?
+    WINNING_LINES.each do |line|
+      if computer_in_two_out_of_three_squares?(line)
+        return true
+      end
+    end
+    nil
+  end
+
+  def last_square_for_human_winning
     WINNING_LINES.each do |line|
       if human_in_two_out_of_three_squares?(line)
+        return @squares.key(winning_line(line)[0])
+      end
+    end
+  end
+
+  def last_square_for_computer_winning
+    WINNING_LINES.each do |line|
+      if computer_in_two_out_of_three_squares?(line)
         return @squares.key(winning_line(line)[0])
       end
     end
@@ -228,7 +254,9 @@ class TTTGame
   end
 
   def computer_moves
-    if board.human_about_to_win?
+    if board.computer_about_to_win?
+      computer_attack
+    elsif board.human_about_to_win?
       computer_defends
     else
       board[board.unmarked_keys.sample] = computer.marker
@@ -236,7 +264,11 @@ class TTTGame
   end
 
   def computer_defends
-    board[board.last_square] = computer.marker
+    board[board.last_square_for_human_winning] = computer.marker
+  end
+
+  def computer_attack
+    board[board.last_square_for_computer_winning] = computer.marker
   end
 
   def display_result_for_one_game
