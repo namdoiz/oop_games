@@ -189,7 +189,7 @@ class TTTGame
     game_mode_aesthetics
     answer = nil
     loop do
-      prompt_for_user_choice
+      prompt_for_user_mode_choice
       answer = gets.chomp.strip
       break if ['1', '2'].include?(answer)
       puts "Sorry must be 1 or 2"
@@ -197,7 +197,7 @@ class TTTGame
     mode_path(answer)
   end
 
-  def prompt_for_user_choice
+  def prompt_for_user_mode_choice
     puts "Enter game mode:"
     puts ""
     puts "(1) One game\n(2) First to 5"
@@ -388,6 +388,7 @@ class TTTGame
 
   def one_game_mode
     loop do
+      ask_who_chooses_who_goes_first
       display_board_for_one_game
       player_move_for_one_game
       display_result_for_one_game
@@ -400,14 +401,66 @@ class TTTGame
   def first_to_five_mode
     count = 0
     loop do
-      display_board_for_first_to_5
-      player_move_for_first_to_5
-      display_result_for_first_to_5
+      first_to_five_main_loop
       count += 1
       break if count == 5
       reset
       display_play_again_message
     end
+  end
+
+  def first_to_five_main_loop
+    ask_who_chooses_who_goes_first
+    display_board_for_first_to_5
+    player_move_for_first_to_5
+    display_result_for_first_to_5
+  end
+
+  def ask_who_chooses_who_goes_first
+    puts ""
+    puts "Do you want to choose who goes first or you want computer to choose"
+    puts ""
+    puts "(1) I'll choose\n(2) Let computer choose"
+    puts ""
+    who_chooses = answer_loop_for_who_goes_first
+    who_goes_first(who_chooses)
+  end
+
+  def who_goes_first(answer)
+    reset
+    who_goes_first_main_case(answer)
+  end
+
+  def who_goes_first_main_case(answer)
+    case answer
+    when "1"
+      puts "Do you want to go first or you want computer to go first"
+      puts ""
+      puts "(1) I'll go first\n(2) Let computer go first"
+      human_decides = answer_loop_for_who_goes_first
+      human_decides_who_goes_first(human_decides)
+    when "2"
+      @current_marker = [HUMAN_MARKER, COMPUTER_MARKER].sample
+    end
+  end
+
+  def human_decides_who_goes_first(answer)
+    case answer
+    when "1"
+      @current_marker = HUMAN_MARKER
+    when "2"
+      @current_marker = COMPUTER_MARKER
+    end
+  end
+
+  def answer_loop_for_who_goes_first
+    answer = nil
+    loop do
+      answer = gets.chomp.strip
+      break if ["1", "2"].include?(answer)
+      puts "Sorry must be 1 or 2"
+    end
+    answer
   end
 
   def display_board_for_first_to_5
