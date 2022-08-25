@@ -88,6 +88,10 @@ class Board
     end
   end
 
+  def five_empty?
+    @squares[5].marker == Square::INITIAL_MARKER
+  end
+
   def winning_line(line)
     @squares.values_at(*line).select { |square| square.marker == " " }
   end
@@ -258,6 +262,8 @@ class TTTGame
       computer_attack
     elsif board.human_about_to_win?
       computer_defends
+    elsif board.five_empty?
+      computer_takes_5
     else
       board[board.unmarked_keys.sample] = computer.marker
     end
@@ -269,6 +275,10 @@ class TTTGame
 
   def computer_attack
     board[board.last_square_for_computer_winning] = computer.marker
+  end
+
+  def computer_takes_5
+    board[5] = computer.marker
   end
 
   def display_result_for_one_game
