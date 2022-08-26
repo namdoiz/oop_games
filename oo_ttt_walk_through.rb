@@ -40,8 +40,13 @@ class Board
     nil
   end
 
+  # How do I get the line "TTTGame.current_human_marker" in line 48 to output what human_marker references in the initialize method of the TTTGAME class 
+  # of line 202
+
+
   def human_in_two_out_of_three_squares?(line)
-    marker_at_lines(@squares.values_at(*line), TTTGame::HUMAN_MARKER) == 2 &&
+    binding.pry
+    marker_at_lines(@squares.values_at(*line), TTTGame.current_human_marker) == 2 &&
       marker_at_lines(@squares.values_at(*line), Square::INITIAL_MARKER) == 1
   end
 
@@ -57,6 +62,7 @@ class Board
   def human_about_to_win?
     WINNING_LINES.each do |line|
       if human_in_two_out_of_three_squares?(line)
+        binding.pry
         return true
       end
     end
@@ -153,21 +159,32 @@ end
 
 class Player
   attr_reader :marker
-  attr_accessor :score
+  attr_accessor :score, :name
 
   def initialize(marker)
     @marker = marker
     @score = 0
+    @name = nil
+  end
+
+  def get_human_name
+    puts "Enter your name"
+    answer = nil
+    loop do
+      answer = gets.chomp.strip
+      break if !answer.empty?
+      puts "Sorry must input name"
+    end
+    @name = answer
   end
 end
 
 class TTTGame
-  HUMAN_MARKER = 'X'
-  COMPUTER_MARKER = 'O'
-
   attr_reader :board, :human, :computer
+  attr_accessor :human_marker
 
-  FIRST_TO_MOVE = HUMAN_MARKER
+  COMPUTER_MARKER = 'O'
+  FIRST_TO_MOVE = @human_marker
 
   def play
     clear
@@ -176,13 +193,22 @@ class TTTGame
     display_goodbye_message
   end
 
+  def current_human_marker
+    human.marker
+  end
+
   private
 
   def initialize
     @board = Board.new
-    @human = Player.new(HUMAN_MARKER)
+    @human_marker = choose_marker
+    @human = Player.new(@human_marker)
     @computer = Player.new(COMPUTER_MARKER)
     @current_marker = FIRST_TO_MOVE
+    @human.name = human.get_human_name
+    @computer.name = "HAL-300"
+    #TTTGame.current_human_marker
+    binding.pry
   end
 
   def ask_mode
@@ -228,7 +254,7 @@ class TTTGame
 
   def display_board_for_one_game
     clear
-    puts "You are #{human.marker} Computer is #{computer.marker}"
+    puts "#{human.name} is #{human.marker} #{computer.name} is #{computer.marker}"
     puts ""
     board.draw
     puts ""
@@ -286,9 +312,9 @@ class TTTGame
 
     case board.winning_marker
     when human.marker
-      puts "You won!"
+      puts "#{human.name} won!"
     when computer.marker
-      puts "Computer Won"
+      puts "#{computer.name} Won"
     else
       puts "It's a tie!"
     end
@@ -310,13 +336,13 @@ class TTTGame
   def after_human_wins
     human.score += 1
     clear_screen_and_display_board_for_first_to_5
-    puts "You won!"
+    puts "#{human.name} won!"
   end
 
   def after_computer_wins
     computer.score += 1
     clear_screen_and_display_board_for_first_to_5
-    puts "Computer Won"
+    puts "#{computer.name} Won"
   end
 
   def play_again?
@@ -362,12 +388,12 @@ class TTTGame
       @current_marker = COMPUTER_MARKER
     else
       computer_moves
-      @current_marker = HUMAN_MARKER
+      @current_marker = human_marker
     end
   end
 
   def human_turn?
-    @current_marker == HUMAN_MARKER
+    @current_marker == human_marker
   end
 
   def player_move_for_one_game
@@ -427,7 +453,7 @@ class TTTGame
   end
 
   def who_goes_first(answer)
-    reset
+    clear
     who_goes_first_main_case(answer)
   end
 
@@ -440,14 +466,14 @@ class TTTGame
       human_decides = answer_loop_for_who_goes_first
       human_decides_who_goes_first(human_decides)
     when "2"
-      @current_marker = [HUMAN_MARKER, COMPUTER_MARKER].sample
+      @current_marker = [human_marker, COMPUTER_MARKER].sample
     end
   end
 
   def human_decides_who_goes_first(answer)
     case answer
     when "1"
-      @current_marker = HUMAN_MARKER
+      @current_marker = human_marker
     when "2"
       @current_marker = COMPUTER_MARKER
     end
@@ -465,12 +491,23 @@ class TTTGame
 
   def display_board_for_first_to_5
     clear
-    puts "You are #{human.marker} Computer is #{computer.marker}"
+    puts "#{human.name} is #{human.marker} #{computer.name} is #{computer.marker}"
     puts ""
     puts "Your score: #{human.score}\nComputer score: #{computer.score}"
     puts ""
     board.draw
     puts ""
+  end
+
+  def choose_marker
+    puts "Choose your marker. Marker must be a single letter or digit"
+    answer = nil
+    loop do
+      answer = gets.chomp.strip
+      break if answer.size == 1 && /[a-zA-Z0-9]/.match?(answer)
+      puts "Sorry marker must be a single letter or digit"
+    end
+    answer
   end
 end
 game = TTTGame.new
