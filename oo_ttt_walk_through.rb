@@ -1,6 +1,8 @@
 require 'pry'
 
 class Board
+  attr_accessor :human_marker
+
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
                   [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # cols
                   [[1, 5, 9], [3, 5, 7]]              # diagonals
@@ -8,6 +10,7 @@ class Board
   def initialize
     @squares = {}
     reset
+    @human_marker = nil
   end
 
   def []=(key, marker)
@@ -40,13 +43,8 @@ class Board
     nil
   end
 
-  # How do I get the line "TTTGame.current_human_marker" in line 48 to output what human_marker references in the initialize method of the TTTGAME class 
-  # of line 202
-
-
   def human_in_two_out_of_three_squares?(line)
-    binding.pry
-    marker_at_lines(@squares.values_at(*line), TTTGame.current_human_marker) == 2 &&
+    marker_at_lines(@squares.values_at(*line), human_marker) == 2 &&
       marker_at_lines(@squares.values_at(*line), Square::INITIAL_MARKER) == 1
   end
 
@@ -62,7 +60,6 @@ class Board
   def human_about_to_win?
     WINNING_LINES.each do |line|
       if human_in_two_out_of_three_squares?(line)
-        binding.pry
         return true
       end
     end
@@ -167,7 +164,7 @@ class Player
     @name = nil
   end
 
-  def get_human_name
+  def set_human_name
     puts "Enter your name"
     answer = nil
     loop do
@@ -193,8 +190,8 @@ class TTTGame
     display_goodbye_message
   end
 
-  def current_human_marker
-    human.marker
+  def self.current_human_marker
+    @human
   end
 
   private
@@ -202,13 +199,12 @@ class TTTGame
   def initialize
     @board = Board.new
     @human_marker = choose_marker
+    @board.human_marker = @human_marker
     @human = Player.new(@human_marker)
     @computer = Player.new(COMPUTER_MARKER)
     @current_marker = FIRST_TO_MOVE
-    @human.name = human.get_human_name
+    @human.name = human.set_human_name
     @computer.name = "HAL-300"
-    #TTTGame.current_human_marker
-    binding.pry
   end
 
   def ask_mode
@@ -254,9 +250,14 @@ class TTTGame
 
   def display_board_for_one_game
     clear
-    puts "#{human.name} is #{human.marker} #{computer.name} is #{computer.marker}"
-    puts ""
+    display_name_and_marker
     board.draw
+    puts ""
+  end
+
+  def display_name_and_marker
+    puts "#{human.name} is #{human.marker}"
+    puts "#{computer.name} is #{computer.marker}"
     puts ""
   end
 
@@ -491,8 +492,7 @@ class TTTGame
 
   def display_board_for_first_to_5
     clear
-    puts "#{human.name} is #{human.marker} #{computer.name} is #{computer.marker}"
-    puts ""
+    display_name_and_marker
     puts "Your score: #{human.score}\nComputer score: #{computer.score}"
     puts ""
     board.draw
