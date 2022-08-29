@@ -230,6 +230,7 @@ class TTTGame
     puts ""
   end
 
+  # directs game play mode flow
   def mode_path(answer)
     case answer
     when '1'
@@ -284,6 +285,7 @@ class TTTGame
     end
   end
 
+  # Options the computer takes depending on the board state
   def computer_moves
     if board.computer_about_to_win?
       computer_attack
@@ -310,7 +312,6 @@ class TTTGame
 
   def display_result_for_one_game
     clear_screen_and_display_board_for_one_game
-
     case board.winning_marker
     when human.marker
       puts "#{human.name} won!"
@@ -323,7 +324,6 @@ class TTTGame
 
   def display_result_for_first_to_5
     clear_screen_and_display_board_for_first_to_5
-
     case board.winning_marker
     when human.marker
       after_human_wins
@@ -453,6 +453,7 @@ class TTTGame
     who_goes_first(who_chooses)
   end
 
+  # Deciding who goes first
   def who_goes_first(answer)
     clear
     who_goes_first_main_case(answer)
