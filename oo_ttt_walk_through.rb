@@ -9,7 +9,7 @@ class Board
 
   def initialize
     @squares = {}
-    reset
+    reset_board_and_current_marker
     @human_marker = nil
   end
 
@@ -99,7 +99,7 @@ class Board
     @squares.values_at(*line).select { |square| square.marker == " " }
   end
 
-  def reset
+  def reset_board_and_current_marker
     (1..9).each do |k, _|
       @squares[k] = Square.new
     end
@@ -204,7 +204,7 @@ class TTTGame
     @computer = Player.new(COMPUTER_MARKER)
     @current_marker = FIRST_TO_MOVE
     @human.name = human.set_human_name
-    @computer.name = "HAL-300"
+    @computer.name = "TGBTG"
   end
 
   def ask_mode
@@ -372,14 +372,16 @@ class TTTGame
     display_board_for_first_to_5
   end
 
-  def reset
-    board.reset
+  def reset_board_and_current_marker
+    board.reset_board_and_current_marker
     @current_marker = FIRST_TO_MOVE
     clear
   end
 
   def display_play_again_message
     puts "Let's play again!"
+    puts ""
+    puts "Your score: #{human.score}\nComputer score: #{computer.score}"
     puts ""
   end
 
@@ -420,20 +422,27 @@ class TTTGame
       player_move_for_one_game
       display_result_for_one_game
       break unless play_again?
-      reset
-      display_play_again_message
+      reset_board_and_current_marker
     end
   end
 
   def first_to_five_mode
-    count = 0
     loop do
-      first_to_five_main_loop
-      count += 1
-      break if count == 5
-      reset
-      display_play_again_message
+      loop do
+        first_to_five_main_loop
+        break if human.score == 5 || computer.score == 5
+        reset_board_and_current_marker
+        display_play_again_message
+      end
+      break unless play_again?
+      reset_score_board_and_current_marker
     end
+  end
+
+  def reset_score_board_and_current_marker
+    human.score = 0
+    computer.score = 0
+    reset_board_and_current_marker
   end
 
   def first_to_five_main_loop
