@@ -33,27 +33,20 @@ class Participant
     answer = nil
     loop do
       answer = gets.chomp.strip
-      break if !answer.empty? || !nil
+      break if !answer.empty? || !answer.nil?
     end
     answer
   end
 
-  def has_aces?
-    cards.any? do |card|
-      card.name.start_with?("Ace")
-    end
-  end
-
   def give_ace_value_during_first_dealing
-    if cards.any?{ |card| card.name.start_with?("Ace") }
+    if cards.any? { |card| card.name.start_with?("Ace") }
       aces = select_aces
       ace_count = aces.size
     end
-    case ace_count
-    when 2
+    if ace_count == 2
       aces[0].value = 11
       aces[1].value = 1
-    when 1
+    elsif ace_count == 1
       aces[0].value = 11
     end
   end
@@ -66,13 +59,18 @@ class Participant
 
   def see_cards
     hide_message
+    show_cards_with_index
+  end
+
+  def show_cards_with_index
     cards.each_with_index do |card, idx|
       puts "(#{idx + 1}) #{card}"
     end
   end
 
   def hide_message
-    puts "#{name} press 2 when you are the only one looking at the screen to see your cards"
+    puts "#{name} press 2 when you are the only one " \
+         "looking at the screen to see your cards"
     answer = nil
     loop do
       answer = gets.chomp.strip
@@ -88,12 +86,6 @@ class Participant
       answer = gets.chomp.strip
       break if ['1'].include?(answer)
       puts "Sorry must enter 1 when done seeing cards"
-    end
-  end
-
-  def see_cards_at_end_of_game
-    cards.each do |card|
-      puts "#{card}"
     end
   end
 
@@ -124,9 +116,7 @@ class Dealer < Participant
 
   def show_cards
     hide_message
-    cards.each_with_index do |card, idx|
-      puts "(#{idx + 1}) #{card}"
-    end
+    show_cards_with_index
     answer = nil
     loop do
       answer = gets.chomp.strip
@@ -157,7 +147,8 @@ class Dealer < Participant
   end
 
   def hide_message_for_reshow_cards
-    puts "#{name} press 2 when you are the only one looking at the screen to see your cards"
+    puts "#{name} press 2 when no one else is looking" \
+         " at the screen to see your cards"
     answer = nil
     loop do
       answer = gets.chomp.strip
@@ -168,9 +159,7 @@ class Dealer < Participant
 
   def see_cards
     hide_message_for_reshow_cards
-    cards.each_with_index do |card, idx|
-      puts "(#{idx + 1}) #{card}"
-    end
+    show_cards_with_index
   end
 end
 
@@ -260,25 +249,32 @@ class Game
   def start
     clear
     deal_cards
-    clear
     show_initial_cards_for_player_and_dealer
+    main_game_loop
+    display_goodbye_message
+  end
+
+  def main_game_loop
     loop do
       player_turn
       if player.busted?
         show_result
         break
       elsif player.stay
-        loop do
-          dealer_turn
-          if dealer.busted? || dealer.stayed?
-            show_result
-            break
-          end
-        end
+        after_player_stays
         break
       end
     end
-    display_goodbye_message
+  end
+
+  def after_player_stays
+    loop do
+      dealer_turn
+      if dealer.busted? || dealer.stayed?
+        show_result
+        break
+      end
+    end
   end
 
   def deal_cards
@@ -304,9 +300,7 @@ class Game
 
   def asking_for_hit_or_stay(participant)
     puts "#{participant.name}, do you want to:"
-    puts "(1) Hit\n(2) Stay\n(3) See cards"
-    puts ""
-    puts "Please enter 1, 2 or 3"
+    hit_stay_see_cards_display
     answer = nil
     loop do
       answer = gets.chomp.strip
@@ -314,6 +308,12 @@ class Game
       puts "Sorry please enter 1, 2 or 3"
     end
     answer
+  end
+
+  def hit_stay_see_cards_display
+    puts "(1) Hit\n(2) Stay\n(3) See cards"
+    puts ""
+    puts "Please enter 1, 2 or 3"
   end
 
   def player_hit_or_stay_case(answer)
@@ -340,43 +340,66 @@ class Game
 
   def show_result
     clear
-    if player.total > dealer.total && player.total <= 21 || dealer.busted?
-      puts "#{player.name}'s cards are:" 
-      player.cards.each{|card| puts "  #{card.name}"}
-      puts ""
-      puts "#{dealer.name}'s cards are:" 
-      dealer.cards.each{|card| puts "  #{card.name}"}
-      puts ""
-      puts "#{player.name}'s total is #{player.total}"
-      puts "#{dealer.name}'s total is #{dealer.total}"
-      puts ""
-      puts "#{player.name} won!"
-    elsif dealer.total > player.total && dealer.total <= 21 || player.busted?
-      puts "#{dealer.name}'s cards are:" 
-      dealer.cards.each{|card| puts "  #{card.name}"}
-      puts ""
-      puts "#{player.name}'s cards are:" 
-      player.cards.each{|card| puts "  #{card.name}"}
-      puts ""
-      puts "#{dealer.name}'s total is #{dealer.total}"
-      puts "#{player.name}'s total is #{player.total}"
-      puts ""
-      puts "#{dealer.name} won!"
+    if player_wins?
+      after_player_wins
+    elsif dealer_wins?
+      after_dealer_wins
     else
-      puts "#{player.name}'s cards are:" 
-      player.cards.each{|card| puts "  #{card.name}"}
-      puts ""
-      puts "#{dealer.name}'s cards are:" 
-      dealer.cards.each{|card| puts "  #{card.name}"}
-      puts ""
-      puts "#{dealer.name}'s total is #{dealer.total}"
-      puts "#{player.name}'s total is #{player.total}"
-      puts ""
-      puts "It's a tie!"
+      after_a_tie
     end
   end
 
+  def player_wins?
+    player.total > dealer.total && player.total <= 21 || dealer.busted?
+  end
+
+  def dealer_wins?
+    dealer.total > player.total && dealer.total <= 21 || player.busted?
+  end
+
+  def after_player_wins
+    display_player_cards_at_end_of_game
+    display_dealer_cards_at_end_of_game
+    display_totals
+    puts ""
+    puts "#{player.name} won!"
+  end
+
+  def after_dealer_wins
+    display_player_cards_at_end_of_game
+    display_dealer_cards_at_end_of_game
+    display_totals
+    puts ""
+    puts "#{dealer.name} won!"
+  end
+
+  def after_a_tie
+    display_player_cards_at_end_of_game
+    display_dealer_cards_at_end_of_game
+    display_totals
+    puts ""
+    puts "It's a tie!"
+  end
+
+  def display_player_cards_at_end_of_game
+    puts "#{player.name}'s cards are:"
+    player.cards.each { |card| puts "  #{card.name}" }
+    puts ""
+  end
+
+  def display_dealer_cards_at_end_of_game
+    puts "#{dealer.name}'s cards are:"
+    dealer.cards.each { |card| puts "  #{card.name}" }
+    puts ""
+  end
+
+  def display_totals
+    puts "#{player.name}'s total is #{player.total}"
+    puts "#{dealer.name}'s total is #{dealer.total}"
+  end
+
   def show_initial_cards_for_player_and_dealer
+    clear
     player.see_cards
     player.done_looking_loop
     clear
