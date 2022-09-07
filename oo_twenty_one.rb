@@ -96,6 +96,10 @@ class Participant
   def ace_values_after_hitting
     cards[-1].value = 1 if last_card_ace? && total > 21
   end
+
+  def last_card_ace?
+    cards[-1].name.start_with?("Ace")
+  end
 end
 
 class Player < Participant
