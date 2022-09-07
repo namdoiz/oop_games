@@ -216,13 +216,13 @@ class Card
 
   def values_for_non_ace_cards(name)
     number_or_letter = name.split[0]
-    if Deck::VALUES[0..8].include?(number_or_letter.to_i)
-      @value = number_or_letter.to_i
-    elsif Deck::VALUES[9..11].include?(number_or_letter.strip)
-      @value = 10
-    else
-      @value = 11
-    end
+    @value = if Deck::VALUES[0..8].include?(number_or_letter.to_i)
+               number_or_letter.to_i
+             elsif Deck::VALUES[9..11].include?(number_or_letter.strip)
+               10
+             else
+               11
+             end
   end
 
   def to_s
@@ -443,7 +443,3 @@ class Game
 end
 
 Game.new.start
-
-=begin
-  - play again loop
-=end
