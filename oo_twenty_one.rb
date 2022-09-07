@@ -9,6 +9,10 @@ class Participant
     @stay = false
   end
 
+  # takes a random card from the deck,
+  # deletes the random card from the deck and
+  # assigns values to the random card if the random card is an ace
+
   def hit(deck)
     random_card = deck.cards.sample
     deck.cards.delete(random_card)
@@ -92,10 +96,6 @@ class Participant
   def ace_values_after_hitting
     cards[-1].value = 1 if last_card_ace? && total > 21
   end
-
-  def last_card_ace?
-    cards[-1].name.start_with?("Ace")
-  end
 end
 
 class Player < Participant
@@ -178,8 +178,6 @@ class Deck
   end
 
   def initialize
-    # obviously, we need some data structure to keep track of cards
-    # array, hash, something else?
     @cards = []
     @available_cards = reset_cards
   end
@@ -190,6 +188,9 @@ class Deck
     end
   end
 
+  # deals initial cards by randomly selecting two
+  # replacing those two with an empty string in the array
+  # and then deletes the empty strings
   def deal
     random_cards = @cards.sample(2)
     random_cards.each do |random_card|
@@ -233,8 +234,6 @@ end
 class Game
   attr_accessor :deck, :player, :dealer
 
-  FIRST_TO_MOVE = @player
-
   def initialize
     clear
     welcome_message
@@ -243,7 +242,6 @@ class Game
     @player.name = @player.set_name
     @dealer = Dealer.new
     @dealer.name = @dealer.set_name
-    @current_marker = FIRST_TO_MOVE
   end
 
   def start
@@ -358,27 +356,27 @@ class Game
   end
 
   def after_player_wins
-    display_player_cards_at_end_of_game
-    display_dealer_cards_at_end_of_game
-    display_totals
+    display_cards_and_totals
     puts ""
     puts "#{player.name} won!"
   end
 
   def after_dealer_wins
-    display_player_cards_at_end_of_game
-    display_dealer_cards_at_end_of_game
-    display_totals
+    display_cards_and_totals
     puts ""
     puts "#{dealer.name} won!"
   end
 
   def after_a_tie
+    display_cards_and_totals
+    puts ""
+    puts "It's a tie!"
+  end
+
+  def display_cards_and_totals
     display_player_cards_at_end_of_game
     display_dealer_cards_at_end_of_game
     display_totals
-    puts ""
-    puts "It's a tie!"
   end
 
   def display_player_cards_at_end_of_game
