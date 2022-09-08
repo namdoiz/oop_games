@@ -1,5 +1,3 @@
-require 'pry'
-
 class Participant
   attr_accessor :cards, :name, :stay
 
@@ -37,7 +35,8 @@ class Participant
     answer = nil
     loop do
       answer = gets.chomp.strip
-      break if !answer.empty? || !answer.nil?
+      break if !answer.empty? && !answer.nil?
+      puts "Sorry, please enter name:"
     end
     answer
   end
