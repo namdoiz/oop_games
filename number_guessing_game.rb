@@ -18,6 +18,7 @@ class GuessingGame
     end
     if guesses_remaining == 0
       puts "You have no more guesses. You lost :("
+      puts "The random number was #{number}"
     end
     good_bye_message
   end
@@ -32,8 +33,13 @@ class GuessingGame
 
   def ask_to_guess
     puts "Guess the random number from 1 to 100!:"
-    answer = gets.chomp.strip.to_i
-    answer_logic(answer)
+    answer = nil
+    loop do
+      answer = gets.chomp.strip
+      break unless /[a-zA-Z]/.match?(answer)
+      puts "Sorry must enter a number from 1 to 100"
+    end
+    answer_logic(answer.to_i)
   end
 
   def answer_logic(answer)
@@ -73,6 +79,10 @@ class GuessingGame
     puts "Goodbye!"
   end
 end
+
+game = GuessingGame.new
+
+game.play
 
 =begin
 Create an object-oriented number guessing class for numbers in the range 1 to 100, with a limit of 7 guesses per game. 
